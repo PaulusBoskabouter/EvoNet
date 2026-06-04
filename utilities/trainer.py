@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from IPython.display import clear_output
 
-def base_model_train(model, X_train, y_train, X_val, y_val, epochs=100, lr=0.001, device='cuda', patience=5):
+def base_model_train(model, X_train, y_train, X_val, y_val, epochs=100, lr=0.001, device='cuda', patience=5, drop_neuron=False):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -43,4 +43,16 @@ def base_model_train(model, X_train, y_train, X_val, y_val, epochs=100, lr=0.001
                     break
         
         clear_output(wait=True)
+
+        if drop_neuron and model.hidden_size >= 5 and np.random.uniform(0.0, 1.0) >= 0.3 and epoch % 10 == 0:
+            index = np.random.randint(0, model.hidden_size)
+            model.drop_neuron(index)
+            print(f"Droppping {index}")
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         model.plot_performance(epochs)
+
+
+
+
+def evo_model_train():
+    ...
