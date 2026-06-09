@@ -113,7 +113,7 @@ class EvoNet(Network):
         self.network = nn.Sequential(
                     nn.Linear(1, self.hidden_size, bias=True),
                     nn.ReLU(),
-                    nn.Linear(self.hidden_size, 1, bias=True)
+                    nn.Linear(self.hidden_size, 1, bias=False)
                 )
 
 
@@ -144,12 +144,12 @@ class EvoNet(Network):
         B_new = torch.cat([B[:index], B[index+1:]])  # Remove element
         A_new = torch.cat([A[:, :index], A[:, index+1:]], dim=1)  # Remove column
 
-        # Update hidden_size
-        new_hidden_size = W_new.shape[0]
+        # Update hidden_size attribute (must happen before reinitializing the network,
+        # since initialize_network builds layers from self.hidden_size)
+        self.hidden_size = W_new.shape[0]
 
         # Reinitialize the network with new shapes
-        self.initialize_network
-
+        self.initialize_network()
 
         # Update state_dict with new weights and biases
         with torch.no_grad():
@@ -157,8 +157,13 @@ class EvoNet(Network):
             self.network[0].bias.data = B_new
             self.network[2].weight.data = A_new
 
-        # Update hidden_size attribute
-        self.hidden_size = new_hidden_size
+        # Refresh the cached weight matrices and neuron data so they stay in sync
+        # with the (now smaller) network — otherwise a later order_by_bend() would
+        # reindex/reimpose the stale, wrong-shaped pre-drop tensors.
+        self.W = W_new
+        self.B = B_new
+        self.A = A_new
+        self.calculate_neuron_data()
 
         # Move model back to the original device
         self.to(device)

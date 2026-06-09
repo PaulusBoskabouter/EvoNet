@@ -57,11 +57,8 @@ def base_model_train(model:Network, X_train:list, y_train:list, X_val:list, y_va
             else:
                 epochs_no_improve += 1
                 if epochs_no_improve >= patience:
-                    print(f"Early stopping at epoch {epoch+1}")
                     break
-        
-        
-        # This insert statement exists for if we want to train without plotting the metrics each time. 
+
         if plot:
             clear_output(wait=True)
             model.plot_performance(epochs)
@@ -71,7 +68,7 @@ def base_model_train(model:Network, X_train:list, y_train:list, X_val:list, y_va
 
 
 
-def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y_val:list, K:int=5, gens:int = 100, epochs:int = 5, crossover:float =0.1, mutation_rate:float =0.15, device: str='cpu') -> tuple[list, list]:
+def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y_val:list, K:int=5, gens:int = 100, epochs:int = 5, crossover:float =0.1, mutation_rate:float =0.15, device: str='cpu', es_patience:int=25, es_tol:float=1e-4) -> tuple[list, list]:
     """
     Trains a population of neural networks using an evolutionary algorithm with:
     - K-tournament selection for parent selection.
@@ -134,16 +131,18 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
     best_fitness = float('inf')
     for net in population:
         base_model_train(net, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-        net.fitness = net.val_loss[-1] + max(0, 0.05 * (net.hidden_size -7))
+        net.fitness = net.val_loss[-1] * (1 + 0.5 * max(0, net.hidden_size - 7))
         if net.fitness < best_fitness:
+            best_fitness = net.fitness
             generational_talent[0] = net
 
         net.order_by_bend()
 
 
+    es_best = float('inf')
+    es_no_improve = 0
+
     for g in range(gens):
-        clear_output(wait=True)
-        print("Generation: ", g+1)
         population = populations[-1]
         new_generation = []
 
@@ -152,6 +151,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
         best_net = None
         for p in population:
             if p.fitness < best_fitness:
+                best_fitness = p.fitness
                 best_net = p
 
         new_generation.append(best_net)
@@ -159,38 +159,29 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
 
         while len(new_generation) < len(population):
 
-            # Randomly select parents
+            # Randomly select parents via K-tournament selection
             parents = [None, None]
             parent_fitness = [float('inf'), float('inf')]
 
             for p in range(2):
-                temp = []
                 for net in np.random.choice(population, size=K):
-                    temp.append(net)             
+                    if p == 1 and net is parents[0]: # Wouldn't want asexual reproduction
+                        continue
                     if net.fitness < parent_fitness[p]:
-                        if parents[0] != net: # Wouldn't want asexual reproduction
-                            parents[p]= net
-                            parent_fitness[p] = net.fitness
+                        parents[p] = net
+                        parent_fitness[p] = net.fitness
                 if parents[p] is None:
-                    print("FOUT CHECK DE LIJST")
-                    print(parent_fitness)
-                    return temp
+                    # Fallback for small/homogeneous populations where every sampled
+                    # net for the second parent matched the first parent
+                    candidates = [net for net in population if net is not parents[0]] or population
+                    parents[p] = candidates[np.random.randint(len(candidates))]
 
-            # Metrics, plotten. Hidden size per generatie, de fitness over generatie, 
-            # Toevoegen neuronen?
+            p1, p2 = parents
 
-            p1, p2 = parents 
-
-            # We create a split based on bending point, between -0.5 and 0.5 
-            split = np.random.uniform(-.5, .5) 
+            # We create a split based on bending point, between -0.5 and 0.5
+            split = np.random.uniform(-.5, .5)
             p1_split = p1.get_split_index(split)
             p2_split = p2.get_split_index(split)
-
-            # p1_split = p1.hidden_size //2 -1
-            # p2_split = p2.hidden_size //2 -1
-
-
-            mutation_rate = 0.1
 
             for child in range(2):
                 # Crossover
@@ -231,12 +222,14 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                 if np.random.uniform(0.0, 1.0) < mutation_rate:
                     count = np.random.randint(1, 4)
                     for _ in range(count):
+                        if c.hidden_size <= 2: # Keep at least 2 neurons, matching the crossover floor
+                            break
                         neuron_index = np.random.randint(0, c.hidden_size)
                         c.drop_neuron(neuron_index)
 
                 # Optimize new child
                 base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-                c.fitness = np.random.randint(0, 10) # c.val_loss[-1] + max(0, 0.1 * (c.hidden_size -7))
+                c.fitness = c.val_loss[-1] * (1 + 1.0 * max(0, c.hidden_size - 7))
                 c.order_by_bend()
 
                 new_generation.append(c)
@@ -247,10 +240,31 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
 
         populations.append(new_generation)
 
+        fitnesses = [n.fitness for n in new_generation]
+        sizes = [n.hidden_size for n in new_generation]
+        best_f = min(fitnesses)
+        best_h = sizes[fitnesses.index(best_f)]
+        print(
+            f"Gen {g+1:>3}/{gens} | "
+            f"best_fit={best_f:.5f}  avg_fit={sum(fitnesses)/len(fitnesses):.5f} | "
+            f"best_h={best_h}  avg_h={sum(sizes)/len(sizes):.1f}",
+            flush=True
+        )
+
+        if es_best - best_f > es_tol:
+            es_best = best_f
+            es_no_improve = 0
+        else:
+            es_no_improve += 1
+            if es_no_improve >= es_patience:
+                print(f"Early stopping at gen {g+1} (no improvement for {es_patience} gens)", flush=True)
+                break
+
     best_fitness = float('inf')
     best_net = None
     for p in populations[-1]:
         if p.fitness < best_fitness:
+            best_fitness = p.fitness
             best_net = p
     generational_talent.append(best_net)
     

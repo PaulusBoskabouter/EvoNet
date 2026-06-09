@@ -1,3 +1,4 @@
 .venv
 Classes/__pycache__
 .python-version
+__pycache__
