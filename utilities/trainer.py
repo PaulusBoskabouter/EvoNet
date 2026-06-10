@@ -131,7 +131,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
     best_fitness = float('inf')
     for net in population:
         base_model_train(net, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-        net.fitness = net.val_loss[-1] * (1 + 0.5 * max(0, net.hidden_size - 7))
+        net.fitness = net.val_loss[-1] * (1 + 0.1 * max(0, net.hidden_size - 7))
         if net.fitness < best_fitness:
             best_fitness = net.fitness
             generational_talent[0] = net
@@ -186,14 +186,16 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
             for child in range(2):
                 # Crossover
                 if np.random.uniform(0.0, 1.0) < crossover:
+                    p1_A, p1_W, p1_B = p1.get_weights() 
+                    p2_A, p2_W, p2_B = p2.get_weights() 
                     if child % 2 == 0:
-                        A = torch.cat([p1.A[:, :p1_split], p2.A[:, p2_split:]], dim=1)
-                        W = torch.cat([p1.W[:p1_split, :], p2.W[p2_split:, :]], dim=0)
-                        B = torch.cat([p1.B[:p1_split], p2.B[p2_split:]], dim=0)
+                        A = torch.cat([p1_A[:, :p1_split], p2_A[:, p2_split:]], dim=1)
+                        W = torch.cat([p1_W[:p1_split, :], p2_W[p2_split:, :]], dim=0)
+                        B = torch.cat([p1_B[:p1_split], p2_B[p2_split:]], dim=0)
                     else:
-                        A = torch.cat([p2.A[:, :p1_split], p1.A[:, p2_split:]], dim=1)
-                        W = torch.cat([p2.W[:p1_split, :], p1.W[p2_split:, :]], dim=0)
-                        B = torch.cat([p2.B[:p1_split], p1.B[p2_split:]], dim=0)
+                        A = torch.cat([p2_A[:, :p1_split], p1_A[:, p2_split:]], dim=1)
+                        W = torch.cat([p2_W[:p1_split, :], p1_W[p2_split:, :]], dim=0)
+                        B = torch.cat([p2_B[:p1_split], p1_B[p2_split:]], dim=0)
                     
 
                     try:
@@ -201,7 +203,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                         assert new_hidden_size>= 2
                         
                         c = EvoNet(hidden_size=new_hidden_size)
-                        c.set_params(W, B, A)
+                        c.initialize_network(A, W, B)
                         
                     
                         
@@ -214,7 +216,10 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
 
                 # Else copy parent
                 else:
-                    c = deepcopy(parents[child])
+                    parents[child].save(filename="temp.pt")
+                    # c = deepcopy(parents[child])
+                    c = EvoNet(hidden_size=parents[child].hidden_size)
+                    c.load(filename="temp.pt")
                     c.val_loss = []
                     c.train_loss = []
                     
@@ -225,11 +230,12 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                         if c.hidden_size <= 2: # Keep at least 2 neurons, matching the crossover floor
                             break
                         neuron_index = np.random.randint(0, c.hidden_size)
+                        # c.agglomerate() # Let's try agglomeration instead of random dropping.
                         c.drop_neuron(neuron_index)
 
                 # Optimize new child
-                base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-                c.fitness = c.val_loss[-1] * (1 + 1.0 * max(0, c.hidden_size - 7))
+                base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=30, plot=False)
+                c.fitness = c.val_loss[-1] * (1 + 0.1 * max(0, c.hidden_size - 7))
                 c.order_by_bend()
 
                 new_generation.append(c)
