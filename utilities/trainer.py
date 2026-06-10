@@ -131,7 +131,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
     best_fitness = float('inf')
     for net in population:
         base_model_train(net, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-        net.fitness = net.val_loss[-1] * (1 + 0.1 * max(0, net.hidden_size - 7))
+        net.fitness = net.val_loss[-1] * (1 + 0.5 * max(0, net.hidden_size - 7))
         if net.fitness < best_fitness:
             best_fitness = net.fitness
             generational_talent[0] = net
@@ -234,8 +234,8 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                         c.drop_neuron(neuron_index)
 
                 # Optimize new child
-                base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=30, plot=False)
-                c.fitness = c.val_loss[-1] * (1 + 0.1 * max(0, c.hidden_size - 7))
+                base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
+                c.fitness = c.val_loss[-1] * (1 + 0.5 * max(0, c.hidden_size - 7))
                 c.order_by_bend()
 
                 new_generation.append(c)
