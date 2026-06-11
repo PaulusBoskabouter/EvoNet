@@ -24,13 +24,14 @@ class SpikeFunc:
 
     def plot(self, resolution: int = 1000, show_grid: bool = False, output_data:tuple=None, plot_title:str=None, save_path:Path = None):
         """Plot the function using matplotlib."""
+
+        plt.figure()
         x = np.linspace(-self.span*1.25, self.span*1.25, resolution)
         y = np.array([self.func(xi) for xi in x])
-        if output_data is not None:
-            for x_out, y_out, label in output_data: 
-                plt.plot(x_out, y_out, '--', label=label, alpha=0.98)
-            
-
+        for x_out, y_out, label in output_data: 
+            plt.plot(x_out, y_out, '--', label=label, alpha=0.98)
+        
+        if len(output_data)> 1:
             plt.legend()
 
         plt.ylim(-0.1 * self.amplitude, 1.1 * self.amplitude)

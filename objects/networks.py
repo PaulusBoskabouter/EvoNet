@@ -267,7 +267,7 @@ class EvoNet(Network):
                 b *= -1
                 a = -1
         else:
-            return # We don't agglomerate
+            return False # We don't agglomerate
         
 
         self.drop_neuron(best_i)
@@ -285,4 +285,6 @@ class EvoNet(Network):
 
         # Reinitialize with new params
         self.initialize_network(A_new, W_new, B_new)
+
+        return True
         

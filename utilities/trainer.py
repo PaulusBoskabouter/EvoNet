@@ -68,7 +68,9 @@ def base_model_train(model:Network, X_train:list, y_train:list, X_val:list, y_va
 
 
 
-def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y_val:list, K:int=5, gens:int = 100, epochs:int = 5, crossover:float =0.1, mutation_rate:float =0.15, device: str='cpu', es_patience:int=25, es_tol:float=1e-4) -> tuple[list, list]:
+def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y_val:list, K:int=5, gens:int = 100, epochs:int = 5, 
+                     crossover:float =0.1, mutation_rate:float =0.15, device: str='cpu', es_patience:int=25, es_tol:float=1e-4, 
+                     alpha:float=0.1, random:bool=False) -> tuple[list, list]:
     """
     Trains a population of neural networks using an evolutionary algorithm with:
     - K-tournament selection for parent selection.
@@ -131,7 +133,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
     best_fitness = float('inf')
     for net in population:
         base_model_train(net, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=25, plot=False)
-        net.fitness = net.val_loss[-1] * (1 + 0.1 * max(0, net.hidden_size - 7))
+        net.fitness = (1+ net.val_loss[-1]) * (1 + alpha * max(0, net.hidden_size - 7))
         if net.fitness < best_fitness:
             best_fitness = net.fitness
             generational_talent[0] = net
@@ -178,26 +180,35 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
 
             p1, p2 = parents
 
-            # We create a split based on bending point, between -0.5 and 0.5
-            split = np.random.uniform(-.5, .5)
-            p1_split = p1.get_split_index(split)
-            p2_split = p2.get_split_index(split)
 
             for child in range(2):
                 # Crossover
                 if np.random.uniform(0.0, 1.0) < crossover:
                     p1_A, p1_W, p1_B = p1.get_weights() 
                     p2_A, p2_W, p2_B = p2.get_weights() 
-                    if child % 2 == 0:
-                        A = torch.cat([p1_A[:, :p1_split], p2_A[:, p2_split:]], dim=1)
-                        W = torch.cat([p1_W[:p1_split, :], p2_W[p2_split:, :]], dim=0)
-                        B = torch.cat([p1_B[:p1_split], p2_B[p2_split:]], dim=0)
-                    else:
-                        A = torch.cat([p2_A[:, :p1_split], p1_A[:, p2_split:]], dim=1)
-                        W = torch.cat([p2_W[:p1_split, :], p1_W[p2_split:, :]], dim=0)
-                        B = torch.cat([p2_B[:p1_split], p1_B[p2_split:]], dim=0)
                     
+                    if random: # Randomly neurons from both parents
+                        random_1_select = np.random.choice(np.arange(p1.hidden_size), size=p1.hidden_size // 2, replace=False)
+                        random_2_select = np.random.choice(np.arange(p2.hidden_size), size=p2.hidden_size // 2, replace=False)
 
+                        A = torch.cat([p1_A[:, random_1_select], p2_A[:, random_2_select]], dim=1)
+                        W = torch.cat([p1_W[random_1_select, :], p2_W[random_2_select, :]], dim=0)
+                        B = torch.cat([p1_B[random_1_select], p2_B[random_2_select]], dim=0)
+
+                    else: # Else use the split heuristic to determine the split
+                        # We create a split based on bending point, between -0.5 and 0.5
+                        split = np.random.uniform(-.5, .5)
+                        p1_split = p1.get_split_index(split)
+                        p2_split = p2.get_split_index(split)
+                        if child % 2 == 0:
+                            A = torch.cat([p1_A[:, :p1_split], p2_A[:, p2_split:]], dim=1)
+                            W = torch.cat([p1_W[:p1_split, :], p2_W[p2_split:, :]], dim=0)
+                            B = torch.cat([p1_B[:p1_split], p2_B[p2_split:]], dim=0)
+                        else:
+                            A = torch.cat([p2_A[:, :p1_split], p1_A[:, p2_split:]], dim=1)
+                            W = torch.cat([p2_W[:p1_split, :], p1_W[p2_split:, :]], dim=0)
+                            B = torch.cat([p2_B[:p1_split], p1_B[p2_split:]], dim=0)
+                        
                     try:
                         new_hidden_size = A.shape[1]
                         assert new_hidden_size>= 2
@@ -205,21 +216,13 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                         c = EvoNet(hidden_size=new_hidden_size)
                         c.initialize_network(A, W, B)
                         
-                    
-                        
-                    except AssertionError: # Else just copy parent
+                    except AssertionError:
                         pass
-                        c = deepcopy(parents[child])
-                        c.val_loss = []
-                        c.train_loss = []
                 
 
                 # Else copy parent
                 else:
-                    parents[child].save(filename="temp.pt")
-                    # c = deepcopy(parents[child])
-                    c = EvoNet(hidden_size=parents[child].hidden_size)
-                    c.load(filename="temp.pt")
+                    c = deepcopy(parents[child])
                     c.val_loss = []
                     c.train_loss = []
                     
@@ -227,15 +230,21 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                 if np.random.uniform(0.0, 1.0) < mutation_rate:
                     count = np.random.randint(1, 4)
                     for _ in range(count):
-                        if c.hidden_size <= 2: # Keep at least 2 neurons, matching the crossover floor
-                            break
+                        # NOTE I WAS BEING LAZY HERE, to re-enable agglomeration uncomment these lines and delete/comment the neuron 2 neuron dropping lines further below
+                        # if c.hidden_size <= 4: # Keep at least 4 neurons, matching the crossover floor
+                        #     break
+                        # succes = c.agglomerate()
+                        # if not succes: # Drop a neuron instead
+                            # neuron_index = np.random.randint(0, c.hidden_size)
+                            # c.drop_neuron(neuron_index)
+                        
+                        # NOTE refers to these two lines below
                         neuron_index = np.random.randint(0, c.hidden_size)
-                        # c.agglomerate() # Let's try agglomeration instead of random dropping.
                         c.drop_neuron(neuron_index)
 
                 # Optimize new child
                 base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=30, plot=False)
-                c.fitness = c.val_loss[-1] * (1 + 0.1 * max(0, c.hidden_size - 7))
+                c.fitness = (1 + c.val_loss[-1]) * (1 + alpha * max(0, c.hidden_size - 7))
                 c.order_by_bend()
 
                 new_generation.append(c)

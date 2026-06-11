@@ -2,10 +2,12 @@ import time
 import pickle
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 from pathlib import Path
 from objects.Functions import SpikeFunc
 from objects.networks import Network, EvoNet
 from utilities.data_sampler import get_train_val_test
+
 
 # evolving_trainer calls IPython's clear_output(wait=True), which is meant for
 # notebook cells and just spams ANSI clear-screen escape codes to a plain log
@@ -36,10 +38,31 @@ train, val = get_train_val_test(spike, 42, 10000)
 x_train, y_train = train
 x_val, y_val = val
 
-P = [[EvoNet(hidden_size=75) for _ in range(50)]]
+######################################################################
+#                   HYPER PARAMS                                     #
+######################################################################
+
+
+HYPERPARAMS = {
+    "exp_id": 4,
+    "alpha":  0.01,
+    "population_size": 200,
+    "initial_hiddem_dim": 150,
+    "K": 5,
+    "crossover_rate":0.2,
+    "mutation_rate":0.1,
+    "generations":300,
+    "back_prop_epochs":150,
+    "random_crossover": True
+}
+
+
+P = [[EvoNet(hidden_size=HYPERPARAMS["initial_hiddem_dim"]) for _ in range(HYPERPARAMS["population_size"])]]
+
 populations, best_networks = evolving_trainer(
     P, x_train, y_train, x_val, y_val,
-    crossover=0.15, mutation_rate=0.2, K=5, gens=300, epochs=150, device=device, es_patience=25, es_tol=1e-4
+    crossover=HYPERPARAMS['crossover_rate'], mutation_rate=HYPERPARAMS["mutation_rate"], K=HYPERPARAMS['K'], alpha=HYPERPARAMS['alpha'], 
+    gens=HYPERPARAMS['generations'], epochs=HYPERPARAMS["back_prop_epochs"], device=device, es_patience=15, es_tol=1e-4, random=HYPERPARAMS['random_crossover']
 )
 
 print("DONE TRAINING", flush=True)
@@ -53,8 +76,9 @@ for net in populations[-1]:
         best_fitness = net.fitness
         best_net = net
 
-with open(results_folder / "evonet_run_a05_h75.pkl", "wb") as f:
+with open(results_folder / f"evonet_experiment_{HYPERPARAMS['exp_id']}.pkl", "wb") as f:
     pickle.dump({
+        "Hyperparameters": HYPERPARAMS,
         "populations_summary": [
             {
                 "fitness": [n.fitness for n in gen],
@@ -69,5 +93,107 @@ with open(results_folder / "evonet_run_a05_h75.pkl", "wb") as f:
         "best_net_fitness": best_net.fitness,
     }, f)
 
+# Disclaimer this is fully AI generated but it's all correct so yay.
+# Prepare data for plotting
+generations = len(populations)
+fitness_mean = []
+fitness_std = []
+val_loss_mean = []
+val_loss_std = []
+hidden_sizes_mean = []
+hidden_sizes_std = []
+
+for gen in populations:
+    fitness = [net.fitness for net in gen]
+    val_loss = [net.val_loss[-1] for net in gen]
+    hidden_size = [net.hidden_size for net in gen]
+
+    fitness_mean.append(np.mean(fitness))
+    fitness_std.append(np.std(fitness))
+    val_loss_mean.append(np.mean(val_loss))
+    val_loss_std.append(np.std(val_loss))
+    hidden_sizes_mean.append(np.mean(hidden_size))  
+    hidden_sizes_std.append(np.std(hidden_size))  
+
+# Create a 1x3 subplot
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5))
+
+# Plot 1: Fitness (Mean ± Std)
+ax1.errorbar(
+    range(generations),
+    fitness_mean,
+    yerr=fitness_std,
+    label="Fitness (Mean ± Std)",
+    color="blue",
+    capsize=5,
+)
+ax1.set_xlabel("Generation")
+ax1.set_ylabel("Fitness")
+ax1.set_title("Fitness Over Generations")
+ax1.legend()
+ax1.grid(True)
+
+# Plot 2: Validation Loss (Mean ± Std)
+ax2.errorbar(
+    range(generations),
+    val_loss_mean,
+    yerr=val_loss_std,
+    label="Val Loss (Mean ± Std)",
+    color="orange",
+    capsize=5,
+)
+ax2.set_xlabel("Generation")
+ax2.set_ylabel("Validation Loss")
+ax2.set_title("Validation Loss Over Generations")
+ax2.legend()
+ax2.grid(True)
+
+# Plot 3: Hidden Size
+# ax3.plot(range(generations), hidden_sizes, marker="o", color="green")
+ax3.errorbar(
+    range(generations),
+    hidden_sizes_mean,
+    yerr=hidden_sizes_std,
+    label="Val Loss (Mean ± Std)",
+    color="green",
+    capsize=5,
+)
+ax3.set_xlabel("Generation")
+ax3.set_ylabel("Hidden Size")
+ax3.set_title("Hidden Size Over Generations")
+ax3.grid(True)
+
+plt.tight_layout()
+plt.savefig(results_folder/f"experiment_{HYPERPARAMS['exp_id']}_training.png")
+# plt.show()o
+
+
+best_fitness = float('inf')
+best_net = None
+gen = 0
+for i, pop in enumerate(populations):
+    for net in pop:
+        if net.fitness < best_fitness:
+            best_net = net
+            gen = i
+print(f"Best net found in generations {i+1}/{len(populations)}")
+
+data = []
+# net = np.random.choice(nets, size=1)[0]
+X = np.arange(-spike.span * 1.25, spike.span * 1.25, 0.05) 
+X = torch.tensor(X, dtype=torch.float32).unsqueeze(1).to(device)
+net = best_net.to(device)
+net.eval()
+Y = net(X).to(device)
+X = X.detach().cpu().squeeze(1).numpy()
+Y = Y.detach().cpu().squeeze(1).numpy()
+
+data.append((X, Y, f"Gen {gen +1}"))
+
+
+spike.plot(output_data=data, plot_title=f"Best EvoNet (hidden dimension: {net.hidden_size}, generation: {gen}) performance", save_path=results_folder/f"experiment_{HYPERPARAMS['exp_id']}_understanding.png")
+
+best_net.save(filename=f"experiment_{HYPERPARAMS['exp_id']}.pt")
+
 print(f"best_net hidden_size={best_net.hidden_size} fitness={best_net.fitness:.5f}", flush=True)
-print("SAVED RESULTS to results/evonet_run_a05_h75.pkl", flush=True)
+
