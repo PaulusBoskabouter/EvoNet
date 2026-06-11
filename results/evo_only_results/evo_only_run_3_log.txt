@@ -1,0 +1,80 @@
+device: cpu
+train size:	8500
+val size:	1500
+[   0.01 min] Gen   1/300 | best_fit=0.23012  avg_fit=0.34557 | best_h=75  avg_h=74.8
+[   0.02 min] Gen   2/300 | best_fit=0.18859  avg_fit=0.27337 | best_h=56  avg_h=74.8
+[   0.03 min] Gen   3/300 | best_fit=0.18673  avg_fit=0.25358 | best_h=30  avg_h=70.9
+[   0.04 min] Gen   4/300 | best_fit=0.18247  avg_fit=0.25652 | best_h=53  avg_h=63.8
+[   0.05 min] Gen   5/300 | best_fit=0.12718  avg_fit=0.22432 | best_h=30  avg_h=53.4
+[   0.06 min] Gen   6/300 | best_fit=0.12718  avg_fit=0.19012 | best_h=30  avg_h=39.3
+[   0.07 min] Gen   7/300 | best_fit=0.12395  avg_fit=0.18535 | best_h=28  avg_h=32.7
+[   0.08 min] Gen   8/300 | best_fit=0.11603  avg_fit=0.15644 | best_h=24  avg_h=29.3
+[   0.09 min] Gen   9/300 | best_fit=0.11582  avg_fit=0.14403 | best_h=24  avg_h=27.0
+[   0.10 min] Gen  10/300 | best_fit=0.11173  avg_fit=0.14556 | best_h=22  avg_h=24.5
+[   0.11 min] Gen  11/300 | best_fit=0.10938  avg_fit=0.13017 | best_h=21  avg_h=23.0
+[   0.12 min] Gen  12/300 | best_fit=0.10821  avg_fit=0.13455 | best_h=20  avg_h=22.4
+[   0.13 min] Gen  13/300 | best_fit=0.10684  avg_fit=0.13528 | best_h=21  avg_h=21.1
+[   0.14 min] Gen  14/300 | best_fit=0.09788  avg_fit=0.12251 | best_h=21  avg_h=20.1
+[   0.15 min] Gen  15/300 | best_fit=0.09531  avg_fit=0.13196 | best_h=18  avg_h=19.8
+[   0.16 min] Gen  16/300 | best_fit=0.09531  avg_fit=0.13020 | best_h=18  avg_h=20.3
+[   0.17 min] Gen  17/300 | best_fit=0.09531  avg_fit=0.12802 | best_h=18  avg_h=20.0
+[   0.18 min] Gen  18/300 | best_fit=0.09531  avg_fit=0.13260 | best_h=18  avg_h=19.4
+[   0.19 min] Gen  19/300 | best_fit=0.08832  avg_fit=0.12771 | best_h=19  avg_h=19.2
+[   0.20 min] Gen  20/300 | best_fit=0.08832  avg_fit=0.14841 | best_h=19  avg_h=18.0
+[   0.21 min] Gen  21/300 | best_fit=0.08832  avg_fit=0.12585 | best_h=19  avg_h=17.7
+[   0.22 min] Gen  22/300 | best_fit=0.08798  avg_fit=0.13035 | best_h=16  avg_h=17.8
+[   0.23 min] Gen  23/300 | best_fit=0.08798  avg_fit=0.13906 | best_h=16  avg_h=17.8
+[   0.24 min] Gen  24/300 | best_fit=0.08413  avg_fit=0.15444 | best_h=16  avg_h=17.3
+[   0.25 min] Gen  25/300 | best_fit=0.07847  avg_fit=0.13416 | best_h=16  avg_h=16.5
+[   0.26 min] Gen  26/300 | best_fit=0.07847  avg_fit=0.12366 | best_h=16  avg_h=15.9
+[   0.26 min] Gen  27/300 | best_fit=0.07847  avg_fit=0.11839 | best_h=16  avg_h=15.4
+[   0.27 min] Gen  28/300 | best_fit=0.07795  avg_fit=0.11455 | best_h=14  avg_h=14.7
+[   0.28 min] Gen  29/300 | best_fit=0.07290  avg_fit=0.13640 | best_h=13  avg_h=15.2
+[   0.29 min] Gen  30/300 | best_fit=0.07290  avg_fit=0.12761 | best_h=13  avg_h=14.1
+[   0.30 min] Gen  31/300 | best_fit=0.07290  avg_fit=0.09872 | best_h=13  avg_h=13.4
+[   0.31 min] Gen  32/300 | best_fit=0.07290  avg_fit=0.12095 | best_h=13  avg_h=13.1
+[   0.32 min] Gen  33/300 | best_fit=0.07290  avg_fit=0.13821 | best_h=13  avg_h=12.4
+[   0.33 min] Gen  34/300 | best_fit=0.07074  avg_fit=0.12768 | best_h=18  avg_h=12.6
+[   0.34 min] Gen  35/300 | best_fit=0.07074  avg_fit=0.16222 | best_h=18  avg_h=12.2
+[   0.35 min] Gen  36/300 | best_fit=0.07074  avg_fit=0.17469 | best_h=18  avg_h=12.3
+[   0.36 min] Gen  37/300 | best_fit=0.07074  avg_fit=0.19588 | best_h=18  avg_h=13.3
+[   0.37 min] Gen  38/300 | best_fit=0.07074  avg_fit=0.13692 | best_h=18  avg_h=14.7
+[   0.38 min] Gen  39/300 | best_fit=0.07074  avg_fit=0.13050 | best_h=18  avg_h=16.0
+[   0.39 min] Gen  40/300 | best_fit=0.07074  avg_fit=0.15398 | best_h=18  avg_h=17.1
+[   0.40 min] Gen  41/300 | best_fit=0.07074  avg_fit=0.13292 | best_h=18  avg_h=17.4
+[   0.41 min] Gen  42/300 | best_fit=0.07074  avg_fit=0.11805 | best_h=18  avg_h=17.7
+[   0.42 min] Gen  43/300 | best_fit=0.07074  avg_fit=0.13949 | best_h=18  avg_h=18.0
+[   0.43 min] Gen  44/300 | best_fit=0.07074  avg_fit=0.15567 | best_h=18  avg_h=17.8
+[   0.44 min] Gen  45/300 | best_fit=0.07074  avg_fit=0.13957 | best_h=18  avg_h=17.3
+[   0.45 min] Gen  46/300 | best_fit=0.07074  avg_fit=0.11506 | best_h=18  avg_h=17.8
+[   0.46 min] Gen  47/300 | best_fit=0.06932  avg_fit=0.19918 | best_h=15  avg_h=17.6
+[   0.47 min] Gen  48/300 | best_fit=0.06932  avg_fit=0.17658 | best_h=15  avg_h=17.1
+[   0.48 min] Gen  49/300 | best_fit=0.06932  avg_fit=0.17509 | best_h=15  avg_h=16.7
+[   0.49 min] Gen  50/300 | best_fit=0.06932  avg_fit=0.11901 | best_h=15  avg_h=15.9
+[   0.50 min] Gen  51/300 | best_fit=0.06932  avg_fit=0.11371 | best_h=15  avg_h=14.8
+[   0.51 min] Gen  52/300 | best_fit=0.06932  avg_fit=0.14950 | best_h=15  avg_h=15.1
+[   0.52 min] Gen  53/300 | best_fit=0.06932  avg_fit=0.13394 | best_h=15  avg_h=14.8
+[   0.53 min] Gen  54/300 | best_fit=0.06932  avg_fit=0.10851 | best_h=15  avg_h=14.5
+[   0.54 min] Gen  55/300 | best_fit=0.06932  avg_fit=0.10179 | best_h=15  avg_h=14.3
+[   0.55 min] Gen  56/300 | best_fit=0.06932  avg_fit=0.26471 | best_h=15  avg_h=14.5
+[   0.56 min] Gen  57/300 | best_fit=0.06932  avg_fit=0.15362 | best_h=15  avg_h=14.1
+[   0.57 min] Gen  58/300 | best_fit=0.06932  avg_fit=0.15185 | best_h=15  avg_h=14.4
+[   0.58 min] Gen  59/300 | best_fit=0.06932  avg_fit=0.24487 | best_h=15  avg_h=14.3
+[   0.59 min] Gen  60/300 | best_fit=0.06932  avg_fit=0.13154 | best_h=15  avg_h=14.2
+[   0.60 min] Gen  61/300 | best_fit=0.06932  avg_fit=0.12735 | best_h=15  avg_h=14.2
+[   0.61 min] Gen  62/300 | best_fit=0.06932  avg_fit=0.13501 | best_h=15  avg_h=14.3
+[   0.63 min] Gen  63/300 | best_fit=0.06932  avg_fit=0.13085 | best_h=15  avg_h=14.5
+[   0.64 min] Gen  64/300 | best_fit=0.06932  avg_fit=0.14372 | best_h=15  avg_h=14.7
+[   0.65 min] Gen  65/300 | best_fit=0.06932  avg_fit=0.16229 | best_h=15  avg_h=14.4
+[   0.66 min] Gen  66/300 | best_fit=0.06932  avg_fit=0.13856 | best_h=15  avg_h=15.0
+[   0.67 min] Gen  67/300 | best_fit=0.06932  avg_fit=0.14015 | best_h=15  avg_h=13.9
+[   0.68 min] Gen  68/300 | best_fit=0.06932  avg_fit=0.14027 | best_h=15  avg_h=14.5
+[   0.69 min] Gen  69/300 | best_fit=0.06932  avg_fit=0.13583 | best_h=15  avg_h=14.8
+[   0.70 min] Gen  70/300 | best_fit=0.06932  avg_fit=0.13685 | best_h=15  avg_h=14.4
+[   0.71 min] Gen  71/300 | best_fit=0.06932  avg_fit=0.17860 | best_h=15  avg_h=14.7
+[   0.73 min] Gen  72/300 | best_fit=0.06932  avg_fit=0.09477 | best_h=15  avg_h=14.6
+[   0.73 min] Early stopping at gen 72 (no improvement for 25 gens)
+DONE TRAINING
+best_net hidden_size=15 fitness=0.06932
+SAVED RESULTS to results/evo_only_run_3.pkl
+SAVED PLOT to results/evo_only_run_3.png
