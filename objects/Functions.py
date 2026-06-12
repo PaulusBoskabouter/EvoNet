@@ -28,17 +28,19 @@ class SpikeFunc:
         plt.figure()
         x = np.linspace(-self.span*1.25, self.span*1.25, resolution)
         y = np.array([self.func(xi) for xi in x])
-        for x_out, y_out, label in output_data: 
-            plt.plot(x_out, y_out, '--', label=label, alpha=0.98)
         
-        if len(output_data)> 1:
-            plt.legend()
 
         plt.ylim(-0.1 * self.amplitude, 1.1 * self.amplitude)
         plt.xlim(-self.span*1.25, self.span*1.25)
         plt.plot(x, y, linewidth='1.5', alpha=0.7)
         plt.xlabel('x')
         plt.ylabel('y')
+        if output_data is not None:
+            for x_out, y_out, label in output_data: 
+                plt.plot(x_out, y_out, '--', label=label, alpha=0.98)
+        
+            if len(output_data)> 1:
+                plt.legend()
         if plot_title is None:
             plt.title(f'Spike Function (span={self.span}, spikes={self.spikes}, amplitude={self.amplitude})')
         else:
@@ -48,3 +50,9 @@ class SpikeFunc:
             plt.savefig(save_path)
         
         plt.show()
+    
+
+    def mse(self, X, Y_predict):
+        # actual_y = self.func(X)
+        actual_y = np.array([self.func(xi) for xi in X])
+        return np.mean((actual_y - Y_predict) **2 )
