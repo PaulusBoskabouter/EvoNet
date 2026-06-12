@@ -53,6 +53,6 @@ class SpikeFunc:
     
 
     def mse(self, X, Y_predict):
-        # actual_y = self.func(X)
+        "Return the MSE"
         actual_y = np.array([self.func(xi) for xi in X])
         return np.mean((actual_y - Y_predict) **2 )

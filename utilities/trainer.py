@@ -70,7 +70,7 @@ def base_model_train(model:Network, X_train:list, y_train:list, X_val:list, y_va
 
 def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y_val:list, K:int=5, gens:int = 100, epochs:int = 5, 
                      crossover:float =0.1, mutation_rate:float =0.15, device: str='cpu', es_patience:int=25, es_tol:float=1e-4, 
-                     alpha:float=0.1, random:bool=False) -> tuple[list, list]:
+                     alpha:float=0.1, random_crossover:bool=False, random_mutation:bool=False) -> tuple[list, list]:
     """
     Trains a population of neural networks using an evolutionary algorithm with:
     - K-tournament selection for parent selection.
@@ -187,7 +187,7 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                     p1_A, p1_W, p1_B = p1.get_weights() 
                     p2_A, p2_W, p2_B = p2.get_weights() 
                     
-                    if random: # Randomly neurons from both parents
+                    if random_crossover: # Randomly neurons from both parents
                         random_1_select = np.random.choice(np.arange(p1.hidden_size), size=p1.hidden_size // 2, replace=False)
                         random_2_select = np.random.choice(np.arange(p2.hidden_size), size=p2.hidden_size // 2, replace=False)
 
@@ -230,17 +230,17 @@ def evolving_trainer(populations:list, x_train:list, y_train:list, x_val:list, y
                 if np.random.uniform(0.0, 1.0) < mutation_rate:
                     count = np.random.randint(1, 4)
                     for _ in range(count):
-                        # NOTE I WAS BEING LAZY HERE, to re-enable agglomeration uncomment these lines and delete/comment the neuron 2 neuron dropping lines further below
-                        # if c.hidden_size <= 4: # Keep at least 4 neurons, matching the crossover floor
-                        #     break
-                        # succes = c.agglomerate()
-                        # if not succes: # Drop a neuron instead
-                            # neuron_index = np.random.randint(0, c.hidden_size)
-                            # c.drop_neuron(neuron_index)
+                        if random_mutation:
+                            neuron_index = np.random.randint(0, c.hidden_size)
+                            c.drop_neuron(neuron_index)
+                        else:
+                            if c.hidden_size <= 4: # Keep at least 4 neurons, matching the crossover floor
+                                break
+                            succes = c.agglomerate()
+                            if not succes: # Drop a neuron instead
+                                neuron_index = np.random.randint(0, c.hidden_size)
+                                c.drop_neuron(neuron_index)
                         
-                        # NOTE refers to these two lines below
-                        neuron_index = np.random.randint(0, c.hidden_size)
-                        c.drop_neuron(neuron_index)
 
                 # Optimize new child
                 base_model_train(c, x_train, y_train, x_val, y_val, epochs=epochs, lr=1e-3, device=device, patience=30, plot=False)

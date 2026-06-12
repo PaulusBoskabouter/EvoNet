@@ -53,7 +53,8 @@ HYPERPARAMS = {
     "mutation_rate":0.1,
     "generations":300,
     "back_prop_epochs":150,
-    "random_crossover": True
+    "random_crossover": True,
+    "random_mutation": True
 }
 
 
@@ -62,7 +63,8 @@ P = [[EvoNet(hidden_size=HYPERPARAMS["initial_hiddem_dim"]) for _ in range(HYPER
 populations, best_networks = evolving_trainer(
     P, x_train, y_train, x_val, y_val,
     crossover=HYPERPARAMS['crossover_rate'], mutation_rate=HYPERPARAMS["mutation_rate"], K=HYPERPARAMS['K'], alpha=HYPERPARAMS['alpha'], 
-    gens=HYPERPARAMS['generations'], epochs=HYPERPARAMS["back_prop_epochs"], device=device, es_patience=15, es_tol=1e-4, random=HYPERPARAMS['random_crossover']
+    gens=HYPERPARAMS['generations'], epochs=HYPERPARAMS["back_prop_epochs"], device=device, es_patience=15, es_tol=1e-4, 
+    random_crossover=HYPERPARAMS['random_crossover'], random_mutation=HYPERPARAMS['random_mutation']
 )
 
 print("DONE TRAINING", flush=True)
